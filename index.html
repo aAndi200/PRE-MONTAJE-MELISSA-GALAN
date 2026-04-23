@@ -1,0 +1,322 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>PRE-MONTAJE DE MELISSA GALAN</title>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Share+Tech+Mono&display=swap');
+
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      background: #000;
+      overflow: hidden;
+      width: 100vw;
+      height: 100vh;
+      font-family: 'Share Tech Mono', monospace;
+      cursor: none;
+    }
+
+    #bg {
+      position: fixed;
+      inset: 0;
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      object-position: center;
+      z-index: 1;
+      transition: opacity 0.08s ease;
+      image-rendering: pixelated;
+    }
+
+    #bg.flash {
+      opacity: 0;
+    }
+
+    /* Scanline overlay */
+    #scanlines {
+      position: fixed;
+      inset: 0;
+      z-index: 2;
+      background: repeating-linear-gradient(
+        to bottom,
+        transparent 0px,
+        transparent 3px,
+        rgba(0,0,0,0.18) 3px,
+        rgba(0,0,0,0.18) 4px
+      );
+      pointer-events: none;
+    }
+
+    /* Vignette */
+    #vignette {
+      position: fixed;
+      inset: 0;
+      z-index: 3;
+      background: radial-gradient(ellipse at center, transparent 55%, rgba(0,0,0,0.75) 100%);
+      pointer-events: none;
+    }
+
+    /* Noise overlay */
+    #noise {
+      position: fixed;
+      inset: 0;
+      z-index: 4;
+      opacity: 0.04;
+      pointer-events: none;
+      background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)'/%3E%3C/svg%3E");
+      background-size: 200px 200px;
+    }
+
+    /* HUD top bar */
+    #hud {
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      z-index: 10;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 14px 24px;
+      background: linear-gradient(to bottom, rgba(0,0,0,0.7) 0%, transparent 100%);
+    }
+
+    #title {
+      font-family: 'Bebas Neue', sans-serif;
+      font-size: 1.6rem;
+      letter-spacing: 0.2em;
+      color: #fff;
+      text-shadow: 0 0 20px rgba(255,0,200,0.8), 0 0 40px rgba(255,0,200,0.4);
+    }
+
+    #counter {
+      font-size: 0.75rem;
+      color: rgba(255,255,255,0.6);
+      letter-spacing: 0.15em;
+    }
+
+    /* Bottom hint */
+    #hint {
+      position: fixed;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      z-index: 10;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      padding: 18px;
+      background: linear-gradient(to top, rgba(0,0,0,0.7) 0%, transparent 100%);
+    }
+
+    #hint-text {
+      font-size: 0.7rem;
+      letter-spacing: 0.3em;
+      color: rgba(255,255,255,0.45);
+      text-transform: uppercase;
+      animation: blink 2s ease-in-out infinite;
+    }
+
+    @keyframes blink {
+      0%, 100% { opacity: 0.45; }
+      50% { opacity: 0.15; }
+    }
+
+    /* Glitch flash effect */
+    #glitch {
+      position: fixed;
+      inset: 0;
+      z-index: 8;
+      pointer-events: none;
+      opacity: 0;
+      mix-blend-mode: screen;
+    }
+
+    #glitch.active {
+      animation: glitch-flash 0.2s steps(1) forwards;
+    }
+
+    @keyframes glitch-flash {
+      0%   { opacity: 1; background: rgba(255,0,255,0.3); }
+      20%  { opacity: 1; background: rgba(0,255,255,0.2); transform: translateX(4px); }
+      40%  { opacity: 1; background: rgba(255,255,0,0.15); transform: translateX(-3px); }
+      60%  { opacity: 0.5; background: rgba(255,0,0,0.2); transform: translateY(2px); }
+      80%  { opacity: 0.2; }
+      100% { opacity: 0; transform: none; }
+    }
+
+    /* Index indicator dots */
+    #dots {
+      position: fixed;
+      right: 18px;
+      top: 50%;
+      transform: translateY(-50%);
+      z-index: 10;
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+
+    .dot {
+      width: 5px;
+      height: 5px;
+      border-radius: 50%;
+      background: rgba(255,255,255,0.25);
+      transition: background 0.3s, transform 0.3s;
+    }
+
+    .dot.active {
+      background: rgba(255,0,200,0.9);
+      transform: scale(1.6);
+      box-shadow: 0 0 8px rgba(255,0,200,0.8);
+    }
+
+    /* Custom cursor */
+    #cursor {
+      position: fixed;
+      width: 16px;
+      height: 16px;
+      border: 2px solid rgba(255,255,255,0.7);
+      border-radius: 50%;
+      pointer-events: none;
+      z-index: 100;
+      transform: translate(-50%, -50%);
+      transition: transform 0.1s ease;
+      mix-blend-mode: difference;
+    }
+  </style>
+</head>
+<body>
+
+  <img id="bg" src="" alt="GIF">
+  <div id="scanlines"></div>
+  <div id="vignette"></div>
+  <div id="noise"></div>
+  <div id="glitch"></div>
+  <div id="cursor"></div>
+
+  <div id="hud">
+    <div id="title"></div>
+    <div id="counter">01 / 19</div>
+  </div>
+
+  <div id="hint">
+    <div id="hint-text">[ C ] — cambiar imagen &nbsp;·&nbsp; click para siguiente</div>
+  </div>
+
+  <div id="dots"></div>
+
+  <script>
+    const media = [
+      "bloggif_69e87aa1a5744.gif",
+      "bloggif_69e87ac849e17.gif",
+      "bloggif_69e87af5319cd.gif",
+      "bloggif_69e87b25965a6.gif",
+      "bloggif_69e87b461f573.gif",
+      "bloggif_69e87b684eb0b.gif",
+      "bloggif_69e87b8a36fb8.gif",
+      "bloggif_69e87bb0b675e.gif",
+      "bloggif_69e87bd0652d9.gif",
+      "bloggif_69e87bf072388.gif",
+      "bloggif_69e87c0942398.gif",
+      "bloggif_69e87d0d2fbb1.gif",
+      "bloggif_69e87d69e8564.gif",
+      "bloggif_69e87db5a9cac.gif",
+      "bloggif_69e87e0300ec5.gif",
+      "bloggif_69e87e2bce45f.gif",
+      "bloggif_69e87e5ec9f65.jpg",
+      "bloggif_69e87e928de55.jpg",
+      "bloggif_69e87f583ff7e.gif"
+    ];
+
+    const bg = document.getElementById('bg');
+    const counter = document.getElementById('counter');
+    const glitch = document.getElementById('glitch');
+    const dotsContainer = document.getElementById('dots');
+    const cursor = document.getElementById('cursor');
+
+    let currentIndex = 0;
+
+    // Build dots
+    media.forEach((_, i) => {
+      const dot = document.createElement('div');
+      dot.className = 'dot' + (i === 0 ? ' active' : '');
+      dot.id = 'dot-' + i;
+      dotsContainer.appendChild(dot);
+    });
+
+    function pad(n) {
+      return String(n).padStart(2, '0');
+    }
+
+    function updateDots(idx) {
+      document.querySelectorAll('.dot').forEach((d, i) => {
+        d.classList.toggle('active', i === idx);
+      });
+    }
+
+    function changeImage(toIndex) {
+      // Glitch flash
+      glitch.classList.remove('active');
+      void glitch.offsetWidth;
+      glitch.classList.add('active');
+
+      // Flash out
+      bg.classList.add('flash');
+
+      setTimeout(() => {
+        bg.src = media[toIndex];
+        counter.textContent = pad(toIndex + 1) + ' / ' + pad(media.length);
+        updateDots(toIndex);
+        bg.classList.remove('flash');
+      }, 80);
+    }
+
+    function getRandomIndex(exclude) {
+      let idx;
+      do {
+        idx = Math.floor(Math.random() * media.length);
+      } while (idx === exclude && media.length > 1);
+      return idx;
+    }
+
+    function next() {
+      const newIdx = getRandomIndex(currentIndex);
+      currentIndex = newIdx;
+      changeImage(currentIndex);
+    }
+
+    // Load first image
+    bg.src = media[0];
+
+    // Key listener
+    document.addEventListener('keydown', (e) => {
+      if (e.key === 'c' || e.key === 'C') {
+        next();
+      }
+    });
+
+    // Click listener
+    document.addEventListener('click', () => {
+      next();
+    });
+
+    // Custom cursor
+    document.addEventListener('mousemove', (e) => {
+      cursor.style.left = e.clientX + 'px';
+      cursor.style.top = e.clientY + 'px';
+    });
+
+    // Glitch cleanup
+    glitch.addEventListener('animationend', () => {
+      glitch.classList.remove('active');
+    });
+  </script>
+</body>
+</html>
